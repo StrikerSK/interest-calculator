@@ -1,347 +1,253 @@
 <!DOCTYPE html>
 <html lang="sk">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Úverová kalkulačka</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-/*
-VOICE: calm, precise money tool — a newspaper graphics desk, not a bank ad.
-IDEA: a loan statement that recalculates as you move the sliders.
-PICTURE: the live result — monthly payment large, split bar principal / interest / fees, yearly column chart.
-COLOUR and TYPE: sky field, white panels, ink text, orange only for interest; Outfit titles + Inter body.
-LAYOUT: sky band with inputs left and result right; below, chart and yearly amortisation table.
-*/
-:root{color-scheme:light dark;
---bg:light-dark(#ffffff,#0b1726);--ink:light-dark(#10223a,#e8f1fa);--muted:light-dark(#4a5b72,#9fb3c8);
---sky:light-dark(#4fb3e8,#123a5c);--panel:light-dark(#ffffff,#10243b);--line:light-dark(#d9e6f0,#22405f);
---acc:#ff7a1a;--prin:light-dark(#10223a,#4fb3e8);--fee:light-dark(#9bb0c6,#5d7894);--real:#2fbf71;--soft:light-dark(#eef6fc,#0f2135)}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
-*{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
-h1,h2{font-family:Outfit,Inter,sans-serif;font-weight:600;line-height:1.05;text-wrap:balance;margin:0}
-h1{font-size:clamp(32px,4.4vw,48px)}h2{font-size:24px;margin-bottom:16px}
-.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
-.wrap{max-width:1240px;margin:0 auto}
-.top{background:var(--sky)}
-.top p.lead{margin:10px 0 28px;max-width:66ch;color:light-dark(#10223a,#cfe3f3)}
-.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px;align-items:start}
-.card{background:var(--panel);border-radius:18px;padding:clamp(20px,3vw,32px);box-shadow:0 10px 30px -18px rgba(16,34,58,.45)}
-.res{position:sticky;top:16px}
-.field{margin-bottom:20px}
-.lab{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;font-weight:500}
-.inbox{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;background:var(--soft);flex:none}
-.inbox:focus-within{border-color:#4fb3e8;outline:3px solid rgba(79,179,232,.3)}
-.inbox input{border:0;background:transparent;color:var(--ink);font:600 16px Inter,sans-serif;width:7.5em;min-height:44px;text-align:right;outline:none}
-.inbox span{color:var(--muted);white-space:nowrap;font-size:14px}
-.inbox select{border:0;background:transparent;width:auto;padding:0 2px;min-height:44px;color:var(--muted);font:500 14px Inter,sans-serif;cursor:pointer}
-input[type=range]{width:100%;accent-color:#4fb3e8;height:28px;margin:0}
-.range-ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
-select.full{font:500 16px Inter,sans-serif;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--soft);color:var(--ink);padding:0 10px;width:100%}
-select:focus-visible,summary:focus-visible{outline:3px solid rgba(79,179,232,.45);outline-offset:2px}
-details{border-top:1px solid var(--line)}
-summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:52px;font-weight:600;cursor:pointer}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"+";margin-inline-start:auto;font:500 22px Outfit,sans-serif;color:var(--muted)}
-details[open] summary::after{content:"–"}
-.on{font-size:12px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--acc);color:#fff;display:none}
-.on.show{display:inline-block}
-details .inner{padding:4px 0 8px}
-.hint{font-size:13px;color:var(--muted);margin:-10px 0 18px}
-.res .k{color:var(--muted);font-size:15px}
-.big{font-family:Outfit,sans-serif;font-weight:600;font-size:clamp(40px,7vw,72px);line-height:1;white-space:nowrap;margin:6px 0 4px;font-variant-numeric:tabular-nums}
-.sub{color:var(--muted);font-size:14px}
-#fixSub{color:var(--ink);font-weight:500;margin-top:4px}
-.apr{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:18px;padding:12px 16px;border-radius:12px;background:var(--soft)}
-.apr b{font-family:Outfit,sans-serif;font-weight:600;font-size:26px;white-space:nowrap}.apr small{flex-basis:100%;color:var(--muted);font-size:13px}
-.save{margin-top:14px;padding:12px 16px;border-radius:12px;background:color-mix(in srgb,var(--real) 16%,transparent);border:1px solid color-mix(in srgb,var(--real) 45%,transparent);display:none}
-.save.show{display:block}.save b{white-space:nowrap}
-.split{display:flex;height:18px;border-radius:9px;overflow:hidden;margin:22px 0 10px;background:var(--soft)}
-.split i{display:block;transition:width .35s ease}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
-.stat{background:var(--soft);border-radius:12px;padding:12px 14px}
-.stat b{display:block;font-family:Outfit,sans-serif;font-weight:600;font-size:clamp(19px,2.2vw,24px);white-space:nowrap;font-variant-numeric:tabular-nums}
-.stat.int b{color:var(--acc)}
-.note{font-size:13px;color:var(--muted);margin:18px 0 0}
-.fig{position:relative;min-height:300px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-th{font-weight:600;font-size:14px;color:var(--muted);white-space:normal;vertical-align:bottom}th:first-child,td:first-child{text-align:left}
-tfoot td{font-weight:600;border-bottom:0}
-td.i{color:var(--acc)}tr.fx td{border-bottom:2px dashed var(--acc)}
-.scroll{overflow-x:auto}
-@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}.res{order:-1;position:static}}
-@media(max-width:600px){.stats{grid-template-columns:minmax(0,1fr)}table{font-size:13px}th,td{padding:8px 6px}.lab{flex-wrap:wrap}}
-@media(prefers-reduced-motion:reduce){.split i{transition:none}}
-</style>
-</head>
-<body>
-<header class="band top"><div class="wrap">
-  <h1>Úverová kalkulačka</h1>
-  <p class="lead">Pre hypotéky, spotrebné úvery, pôžičky na auto aj iné úvery splácané rovnakými mesačnými splátkami. Zadaj výšku úveru, sadzbu a dobu splácania; v rozbaľovacích častiach doplníš poplatky, poistenie, fixáciu a mimoriadne splátky.</p>
-  <div class="grid">
-    <form class="card" id="f" autocomplete="off">
-      <div class="field">
-        <div class="lab"><label for="amt">Výška úveru</label>
-          <div class="inbox"><input id="amt" inputmode="decimal"><select id="cur" aria-label="Mena"><option value="EUR">€</option><option value="CZK">Kč</option></select></div></div>
-        <input type="range" id="amtR" aria-label="Výška úveru posuvník">
-        <div class="range-ends"><span id="amtMin"></span><span id="amtMax"></span></div>
-      </div>
-      <div class="field">
-        <div class="lab"><label for="rate">Úroková sadzba (p. a.)</label>
-          <div class="inbox"><input id="rate" inputmode="decimal"><span>%</span></div></div>
-        <input type="range" id="rateR" min="0" max="20" step="0.05" aria-label="Úroková sadzba posuvník">
-        <div class="range-ends"><span>0 %</span><span>20 %</span></div>
-      </div>
-      <div class="field">
-        <div class="lab"><label for="yrs">Doba splácania</label>
-          <div class="inbox"><input id="yrs" inputmode="decimal"><select id="unit" aria-label="Jednotka doby splácania"><option value="y">rokov</option><option value="m">mesiacov</option></select></div></div>
-        <input type="range" id="yrsR" aria-label="Doba splácania posuvník">
-        <div class="range-ends"><span id="tMin"></span><span id="tMax"></span></div>
-      </div>
-      <div class="field">
-        <div class="lab"><label for="inf">Priemerná inflácia (p. a.)</label>
-          <div class="inbox"><input id="inf" inputmode="decimal"><span>%</span></div></div>
-        <input type="range" id="infR" min="0" max="10" step="0.1" aria-label="Inflácia posuvník">
-        <div class="range-ends"><span>0 %</span><span>10 %</span></div>
-      </div>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Úverová kalkulačka</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
 
-      <details id="dFee"><summary>Poplatky a poistenie <span class="on" id="bFee">zapnuté</span></summary><div class="inner">
-        <div class="field"><div class="lab"><label for="fee">Jednorazový poplatok</label>
-          <div class="inbox"><input id="fee" inputmode="decimal"><span class="cs">€</span></div></div></div>
-        <div class="field"><div class="lab"><label for="mfee">Mesačný poplatok (vedenie účtu)</label>
-          <div class="inbox"><input id="mfee" inputmode="decimal"><span class="cs">€</span></div></div></div>
-        <div class="field"><div class="lab"><label for="ins">Poistenie úveru</label>
-          <div class="inbox"><input id="ins" inputmode="decimal"><select id="insT" aria-label="Typ poistenia"><option value="fix">€ mesačne</option><option value="pct">% zo splátky</option></select></div></div></div>
-        <p class="hint">Poistenie sa platí s každou splátkou. Pri voľbe „% zo splátky“ sa počíta z aktuálnej splátky istiny a úroku.</p>
-      </div></details>
+  <body>
+    <header class="band top">
+      <div class="wrap">
+        <h1>Úverová kalkulačka</h1>
+        <p class="lead">
+          Pre hypotéky, spotrebné úvery, pôžičky na auto aj iné úvery splácané rovnakými mesačnými splátkami.
+          Zadaj výšku úveru, sadzbu a dobu splácania; v rozbaľovacích častiach doplníš poplatky, poistenie,
+          fixáciu a mimoriadne splátky.
+        </p>
 
-      <details id="dFix"><summary>Fixácia a zmena sadzby <span class="on" id="bFix">zapnuté</span></summary><div class="inner">
-        <div class="field"><div class="lab"><label for="fixY">Dĺžka fixácie</label>
-          <div class="inbox"><input id="fixY" inputmode="numeric"><span>rokov</span></div></div></div>
-        <div class="field"><div class="lab"><label for="rate2">Sadzba po fixácii</label>
-          <div class="inbox"><input id="rate2" inputmode="decimal"><span>%</span></div></div></div>
-        <p class="hint">0 rokov = sadzba platí počas celej doby. Po skončení fixácie sa splátka prepočíta na zvyšný zostatok a zvyšnú dobu.</p>
-      </div></details>
+        <div class="grid">
+          <!-- Vstupy -->
+          <form class="card" id="f" autocomplete="off">
+            <div class="field">
+              <div class="lab">
+                <label for="amt">Výška úveru</label>
+                <div class="inbox">
+                  <input id="amt" inputmode="decimal">
+                  <select id="cur" aria-label="Mena">
+                    <option value="EUR">€</option>
+                    <option value="CZK">Kč</option>
+                  </select>
+                </div>
+              </div>
+              <input type="range" id="amtR" aria-label="Výška úveru posuvník">
+              <div class="range-ends"><span id="amtMin"></span><span id="amtMax"></span></div>
+            </div>
 
-      <details id="dX"><summary>Mimoriadne splátky <span class="on" id="bX">zapnuté</span></summary><div class="inner">
-        <div class="field"><div class="lab"><label for="xM">Pravidelne navyše každý mesiac</label>
-          <div class="inbox"><input id="xM" inputmode="decimal"><span class="cs">€</span></div></div></div>
-        <div class="field"><div class="lab"><label for="xOne">Jednorazová splátka</label>
-          <div class="inbox"><input id="xOne" inputmode="decimal"><span class="cs">€</span></div></div></div>
-        <div class="field"><div class="lab"><label for="xYear">Jednorazovú zaplatím na konci</label>
-          <div class="inbox"><input id="xYear" inputmode="numeric"><span>. roka</span></div></div></div>
-        <div class="field"><label for="xMode" class="lab">Čo s ušetrenou istinou</label>
-          <select id="xMode" class="full"><option value="kratsia">Skrátiť dobu splácania (splátka ostáva)</option><option value="nizsia">Znížiť splátku (doba ostáva)</option></select></div>
-        <p class="hint">Banka si za mimoriadnu splátku môže účtovať poplatok – zadaj ho do jednorazového poplatku.</p>
-      </div></details>
-    </form>
+            <div class="field">
+              <div class="lab">
+                <label for="rate">Úroková sadzba (p. a.)</label>
+                <div class="inbox"><input id="rate" inputmode="decimal"><span>%</span></div>
+              </div>
+              <input type="range" id="rateR" min="0" max="20" step="0.05" aria-label="Úroková sadzba posuvník">
+              <div class="range-ends"><span>0 %</span><span>20 %</span></div>
+            </div>
 
-    <section class="card res" aria-live="polite">
-      <div class="k">Mesačná splátka</div>
-      <div class="big" id="pay">–</div>
-      <div class="sub" id="paySub"></div>
-      <div class="sub" id="fixSub" hidden></div>
-      <div class="apr"><span>RPMN</span><b id="apr">–</b><small>ročná percentuálna miera nákladov – úrok, poplatky aj poistenie, bez mimoriadnych splátok</small></div>
-      <div class="save" id="save"></div>
-      <div class="split" role="img" aria-label="Pomer istiny, úrokov a poplatkov"><i id="sP" style="background:var(--prin)"></i><i id="sI" style="background:var(--acc)"></i><i id="sF" style="background:var(--fee)"></i></div>
-      <div class="legend"><span><span class="dot" style="background:var(--prin)"></span>Istina <b id="pP"></b></span><span><span class="dot" style="background:var(--acc)"></span>Úroky <b id="pI"></b></span><span id="lF"><span class="dot" style="background:var(--fee)"></span>Poplatky a poistenie <b id="pF"></b></span></div>
-      <div class="stats">
-        <div class="stat"><span class="k">Výška úveru</span><b id="oP">–</b></div>
-        <div class="stat int"><span class="k">Úroky spolu</span><b id="oI">–</b></div>
-        <div class="stat"><span class="k">Celkom zaplatíš</span><b id="oT">–</b></div>
+            <div class="field">
+              <div class="lab">
+                <label for="yrs">Doba splácania</label>
+                <div class="inbox">
+                  <input id="yrs" inputmode="decimal">
+                  <select id="unit" aria-label="Jednotka doby splácania">
+                    <option value="y">rokov</option>
+                    <option value="m">mesiacov</option>
+                  </select>
+                </div>
+              </div>
+              <input type="range" id="yrsR" aria-label="Doba splácania posuvník">
+              <div class="range-ends"><span id="tMin"></span><span id="tMax"></span></div>
+            </div>
+
+            <div class="field">
+              <div class="lab">
+                <label for="inf">Priemerná inflácia (p. a.)</label>
+                <div class="inbox"><input id="inf" inputmode="decimal"><span>%</span></div>
+              </div>
+              <input type="range" id="infR" min="0" max="10" step="0.1" aria-label="Inflácia posuvník">
+              <div class="range-ends"><span>0 %</span><span>10 %</span></div>
+            </div>
+
+            <details id="dFee">
+              <summary>Poplatky a poistenie <span class="on" id="bFee">zapnuté</span></summary>
+              <div class="inner">
+                <div class="field">
+                  <div class="lab">
+                    <label for="fee">Jednorazový poplatok</label>
+                    <div class="inbox"><input id="fee" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="mfee">Mesačný poplatok (vedenie účtu)</label>
+                    <div class="inbox"><input id="mfee" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="ins">Poistenie úveru</label>
+                    <div class="inbox">
+                      <input id="ins" inputmode="decimal">
+                      <select id="insT" aria-label="Typ poistenia">
+                        <option value="fix">€ mesačne</option>
+                        <option value="pct">% zo splátky</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <p class="hint">
+                  Poistenie sa platí s každou splátkou. Pri voľbe „% zo splátky“ sa počíta z aktuálnej splátky
+                  istiny a úroku.
+                </p>
+              </div>
+            </details>
+
+            <details id="dFix">
+              <summary>Fixácia a zmena sadzby <span class="on" id="bFix">zapnuté</span></summary>
+              <div class="inner">
+                <div class="field">
+                  <div class="lab">
+                    <label for="fixY">Dĺžka fixácie</label>
+                    <div class="inbox"><input id="fixY" inputmode="numeric"><span>rokov</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="rate2">Sadzba po fixácii</label>
+                    <div class="inbox"><input id="rate2" inputmode="decimal"><span>%</span></div>
+                  </div>
+                </div>
+                <p class="hint">
+                  0 rokov = sadzba platí počas celej doby. Po skončení fixácie sa splátka prepočíta na zvyšný
+                  zostatok a zvyšnú dobu.
+                </p>
+              </div>
+            </details>
+
+            <details id="dX">
+              <summary>Mimoriadne splátky <span class="on" id="bX">zapnuté</span></summary>
+              <div class="inner">
+                <div class="field">
+                  <div class="lab">
+                    <label for="xM">Pravidelne navyše každý mesiac</label>
+                    <div class="inbox"><input id="xM" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="xOne">Jednorazová splátka</label>
+                    <div class="inbox"><input id="xOne" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="xYear">Jednorazovú zaplatím na konci</label>
+                    <div class="inbox"><input id="xYear" inputmode="numeric"><span>. roka</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="xMode" class="lab">Čo s ušetrenou istinou</label>
+                  <select id="xMode" class="full">
+                    <option value="kratsia">Skrátiť dobu splácania (splátka ostáva)</option>
+                    <option value="nizsia">Znížiť splátku (doba ostáva)</option>
+                  </select>
+                </div>
+                <p class="hint">
+                  Banka si za mimoriadnu splátku môže účtovať poplatok – zadaj ho do jednorazového poplatku.
+                </p>
+              </div>
+            </details>
+          </form>
+
+          <!-- Výsledok -->
+          <section class="card res" aria-live="polite">
+            <div class="k">Mesačná splátka</div>
+            <div class="big" id="pay">–</div>
+            <div class="sub" id="paySub"></div>
+            <div class="sub" id="fixSub" hidden></div>
+
+            <div class="apr">
+              <span>RPMN</span>
+              <b id="apr">–</b>
+              <small>ročná percentuálna miera nákladov – úrok, poplatky aj poistenie, bez mimoriadnych splátok</small>
+            </div>
+
+            <div class="save" id="save"></div>
+
+            <div class="split" role="img" aria-label="Pomer istiny, úrokov a poplatkov">
+              <i id="sP" style="background: var(--prin)"></i>
+              <i id="sI" style="background: var(--acc)"></i>
+              <i id="sF" style="background: var(--fee)"></i>
+            </div>
+            <div class="legend">
+              <span><span class="dot" style="background: var(--prin)"></span>Istina <b id="pP"></b></span>
+              <span><span class="dot" style="background: var(--acc)"></span>Úroky <b id="pI"></b></span>
+              <span id="lF"><span class="dot" style="background: var(--fee)"></span>Poplatky a poistenie <b id="pF"></b></span>
+            </div>
+
+            <div class="stats">
+              <div class="stat"><span class="k">Výška úveru</span><b id="oP">–</b></div>
+              <div class="stat int"><span class="k">Úroky spolu</span><b id="oI">–</b></div>
+              <div class="stat"><span class="k">Celkom zaplatíš</span><b id="oT">–</b></div>
+            </div>
+
+            <div class="k" style="margin-top: 20px">Očistené o infláciu (v dnešných peniazoch)</div>
+            <div class="stats" style="margin-top: 8px">
+              <div class="stat"><span class="k">Posledná splátka</span><b id="rL">–</b></div>
+              <div class="stat int"><span class="k">Reálny úrok</span><b id="rI">–</b></div>
+              <div class="stat"><span class="k">Reálne zaplatíš</span><b id="rT">–</b></div>
+            </div>
+
+            <p class="note">
+              Anuitné splácanie s mesačným úročením. Inflácia sa uvažuje ako konštantná. Skutočná ponuka banky sa
+              môže líšiť.
+            </p>
+          </section>
+        </div>
       </div>
-      <div class="k" style="margin-top:20px">Očistené o infláciu (v dnešných peniazoch)</div>
-      <div class="stats" style="margin-top:8px">
-        <div class="stat"><span class="k">Posledná splátka</span><b id="rL">–</b></div>
-        <div class="stat int"><span class="k">Reálny úrok</span><b id="rI">–</b></div>
-        <div class="stat"><span class="k">Reálne zaplatíš</span><b id="rT">–</b></div>
+    </header>
+
+    <section class="band">
+      <div class="wrap">
+        <h2>Ako sa splátky delia v čase</h2>
+        <div class="legend" style="margin-bottom: 10px">
+          <span><span class="dot" style="background: var(--prin)"></span>Istina (vrátane mimoriadnych)</span>
+          <span><span class="dot" style="background: var(--acc)"></span>Úrok</span>
+          <span><span class="dot" style="background: var(--fee)"></span>Poplatky a poistenie</span>
+          <span><span class="dot" style="background: var(--real)"></span>Ročne zaplatené v dnešných peniazoch</span>
+        </div>
+        <div class="fig">
+          <svg id="chart" role="img" aria-label="Ročné rozdelenie splátok"></svg>
+        </div>
       </div>
-      <p class="note">Anuitné splácanie s mesačným úročením. Inflácia sa uvažuje ako konštantná. Skutočná ponuka banky sa môže líšiť.</p>
     </section>
-  </div>
-</div></header>
 
-<section class="band"><div class="wrap">
-  <h2>Ako sa splátky delia v čase</h2>
-  <div class="legend" style="margin-bottom:10px"><span><span class="dot" style="background:var(--prin)"></span>Istina (vrátane mimoriadnych)</span><span><span class="dot" style="background:var(--acc)"></span>Úrok</span><span><span class="dot" style="background:var(--fee)"></span>Poplatky a poistenie</span><span><span class="dot" style="background:var(--real)"></span>Ročne zaplatené v dnešných peniazoch</span></div>
-  <div class="fig"><svg id="chart" role="img" aria-label="Ročné rozdelenie splátok"></svg></div>
-</div></section>
+    <section class="band" style="padding-top: 0">
+      <div class="wrap">
+        <h2>Splátkový kalendár po rokoch</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Rok</th>
+                <th>Zaplatené spolu</th>
+                <th>Istina</th>
+                <th>Úrok</th>
+                <th>Poplatky a poistenie</th>
+                <th>Zostatok</th>
+                <th>V dnešných peniazoch</th>
+              </tr>
+            </thead>
+            <tbody id="tb"></tbody>
+            <tfoot id="tf"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
 
-<section class="band" style="padding-top:0"><div class="wrap">
-  <h2>Splátkový kalendár po rokoch</h2>
-  <div class="scroll"><table>
-    <thead><tr><th>Rok</th><th>Zaplatené spolu</th><th>Istina</th><th>Úrok</th><th>Poplatky a poistenie</th><th>Zostatok</th><th>V dnešných peniazoch</th></tr></thead>
-    <tbody id="tb"></tbody>
-    <tfoot id="tf"></tfoot>
-  </table></div>
-</div></section>
-
-<script>
-{
-const $=id=>document.getElementById(id);
-const D={amt:150000,rate:3.9,yrs:30,unit:'y',cur:'EUR',inf:2.5,fee:0,mfee:0,ins:0,insT:'fix',fixY:0,rate2:4.5,xM:0,xOne:0,xYear:5,xMode:'kratsia'};
-const S={...D};
-try{const s=JSON.parse(localStorage.getItem('hypo-calc')||'null');if(s)for(const k in D)if(k in s&&s[k]!=null)S[k]=s[k]}catch(e){}
-const CUR={EUR:{sym:'€',loc:'sk-SK',min:500,max:1000000,step:500},CZK:{sym:'Kč',loc:'cs-CZ',min:10000,max:25000000,step:10000}};
-let A=null;
-
-const parse=v=>{const n=parseFloat(String(v).replace(/[\s  ]/g,'').replace(',','.'));return isFinite(n)?n:0};
-const fmt=(n,d=0)=>new Intl.NumberFormat(CUR[S.cur].loc,{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
-const nf=(v,d)=>d?(fmt(v,d).replace(/,?0+$/,'')||'0'):fmt(v,0);
-const money=(n,d=0)=>fmt(n,d)+' '+CUR[S.cur].sym;
-const pl=(n,a,b,c)=>n===1?a:n>=2&&n<=4?b:c;
-const termTxt=m=>{const y=Math.floor(m/12),r=m%12,ys=`${y} ${pl(y,'rok','roky','rokov')}`,ms=`${r} ${pl(r,'mesiac','mesiace','mesiacov')}`;return !y?ms:!r?ys:`${ys} a ${ms}`};
-const short=n=>n>=1e6?fmt(n/1e6,1)+' M':n>=1e3?fmt(n/1e3,0)+' k':fmt(n,0);
-const ann=(P,r,n)=>n<=0?P:r===0?P/n:P*r/(1-Math.pow(1+r,-n));
-
-// Simulácia mesiac po mesiaci. extras=false → zmluvný priebeh (pre RPMN a porovnanie).
-function sim(extras){
-  const P=Math.max(0,S.amt),n=Math.max(1,Math.round(S.yrs*12)),r1=S.rate/1200,r2=S.rate2/1200;
-  const fixM=S.fixY>0&&Math.round(S.fixY*12)<n?Math.round(S.fixY*12):0;
-  const xm=extras?S.xM:0,oneM=extras&&S.xOne>0?Math.max(1,Math.round(S.xYear*12)):0;
-  let bal=P,r=r1,M=ann(P,r1,n),m=0,I=0,FE=0;
-  const fl=[],rows=[];let y={pr:0,in:0,fe:0};
-  while(bal>0.005&&m<n){
-    m++;
-    if(fixM&&m===fixM+1){
-      // zachová aktuálny koniec splácania (pri skrátení doby mimoriadnymi splátkami)
-      let left=r>0?-Math.log(1-bal*r/M)/Math.log(1+r):bal/M;if(!isFinite(left)||left<1)left=n-m+1;
-      r=r2;M=ann(bal,r2,Math.min(n-m+1,Math.ceil(left-1e-6)));
-    }
-    const it=bal*r;let pr=Math.min(bal,M-it);if(m===n)pr=bal;bal-=pr;
-    let ex=0;if(bal>0.005){ex=Math.min(bal,xm+(m===oneM?S.xOne:0));bal-=ex}
-    const pay=pr+it,fe=S.mfee+(S.insT==='pct'?pay*S.ins/100:S.ins);
-    fl.push({pay,ex,fe});I+=it;FE+=fe;
-    y.pr+=pr+ex;y.in+=it;y.fe+=fe;
-    if(ex>0&&S.xMode==='nizsia'&&bal>0.005)M=ann(bal,r,n-m);
-    if(m%12===0||bal<=0.005||m===n){rows.push({y:Math.ceil(m/12),...y,bal:Math.max(0,bal)});y={pr:0,in:0,fe:0}}
-  }
-  return{P,n,m,fl,rows,I,FE,fixM,T:P+I+FE+S.fee};
-}
-
-// RPMN podľa smernice EÚ 2008/48: vyplatená suma = Σ platba_k/(1+X)^(k/12)
-function apr(net,fl){
-  if(net<=0||!fl.length)return null;
-  const f=x=>{const v=Math.pow(1+x,-1/12);let d=1,s=0;for(const c of fl){d*=v;s+=(c.pay+c.ex+c.fe)*d}return s-net};
-  let lo=-0.99,hi=20;if(f(lo)<0||f(hi)>0)return null;
-  for(let i=0;i<80;i++){const mid=(lo+hi)/2;f(mid)>0?lo=mid:hi=mid}
-  return(lo+hi)/2;
-}
-
-function render(){
-  const c=CUR[S.cur];
-  for(const e of document.querySelectorAll('.cs'))e.textContent=c.sym;
-  $('insT').options[0].text=c.sym+' mesačne';
-  const B=sim(false);A=sim(true);
-  const hasX=S.xM>0||S.xOne>0,first=A.fl[0];
-  $('bFee').classList.toggle('show',S.fee>0||S.mfee>0||S.ins>0);
-  $('bFix').classList.toggle('show',!!A.fixM);
-  $('bX').classList.toggle('show',hasX);
-
-  $('pay').textContent=money(first.pay+first.fe,2);
-  $('paySub').textContent=`${B.n} splátok · ${nf(S.rate,2)} % ročne · ${termTxt(B.n)}`+(first.fe>0?` · z toho poplatky a poistenie ${money(first.fe,2)}`:'')+(S.xM>0?` · + ${money(S.xM)} mimoriadne`:'');
-  const fx=A.fixM&&A.fl[A.fixM];
-  $('fixSub').hidden=!fx;
-  if(fx)$('fixSub').textContent=`Po fixácii (od ${A.fixM/12+1}. roka) pri ${nf(S.rate2,2)} %: ${money(fx.pay+fx.fe,2)} mesačne`;
-  const a=apr(A.P-S.fee,B.fl);
-  $('apr').textContent=a==null?'–':nf(a*100,2)+' %';
-
-  const sv=$('save');sv.classList.toggle('show',hasX);
-  if(hasX){
-    const dI=B.I-A.I,dM=B.m-A.m,li=Math.max(0,A.m-2),la=A.fl[li],lb=B.fl[li];
-    sv.innerHTML=`Mimoriadne splátky ti ušetria <b>${money(dI)}</b> na úrokoch`+
-      (S.xMode==='kratsia'?(dM>0?` a úver splatíš o <b>${termTxt(dM)}</b> skôr (za ${termTxt(A.m)}).`:'.'):
-      `; ku koncu splácania budeš platiť <b>${money(la.pay+la.fe,2)}</b> namiesto ${money(lb.pay+lb.fe,2)} mesačne.`);
-  }
-
-  const fees=A.FE+S.fee,tot=A.P+A.I+fees||1,pp=A.P/tot*100,pi=A.I/tot*100,pf=fees/tot*100;
-  $('sP').style.width=pp+'%';$('sI').style.width=pi+'%';$('sF').style.width=pf+'%';
-  $('pP').textContent=nf(pp,0)+' %';$('pI').textContent=nf(pi,0)+' %';$('pF').textContent=nf(pf,0)+' %';
-  $('lF').hidden=fees<=0;
-  $('oP').textContent=money(A.P);$('oI').textContent=money(A.I);$('oT').textContent=money(A.T);
-
-  // inflácia
-  const q=Math.pow(1+S.inf/100,1/12);let d=1,rl=0,rf=0,last=0,yi=0,ry=0;const re=[];
-  A.fl.forEach((f,i)=>{d/=q;const v=(f.pay+f.ex+f.fe)*d;rl+=(f.pay+f.ex)*d;rf+=f.fe*d;ry+=v;last=(f.pay+f.fe)*d;
-    if((i+1)%12===0||i===A.fl.length-1){re.push(ry);ry=0}});
-  A.rows.forEach((r,i)=>r.re=re[i]);
-  $('rL').textContent=money(last,2);$('rI').textContent=money(rl-A.P);$('rT').textContent=money(rl+rf+S.fee);
-
-  const fixYr=A.fixM/12;
-  $('tb').innerHTML=A.rows.map(r=>`<tr${r.y===fixYr?' class="fx" title="Koniec fixácie"':''}><td>${r.y}.</td><td>${money(r.pr+r.in+r.fe)}</td><td>${money(r.pr)}</td><td class="i">${money(r.in)}</td><td>${money(r.fe)}</td><td>${money(r.bal)}</td><td>${money(r.re)}</td></tr>`).join('');
-  $('tf').innerHTML=`<tr><td>Spolu</td><td>${money(A.P+A.I+A.FE)}</td><td>${money(A.P)}</td><td class="i">${money(A.I)}</td><td>${money(A.FE)}</td><td></td><td>${money(rl+rf)}</td></tr>`+
-    (S.fee>0?`<tr><td>+ jednorazový poplatok</td><td>${money(S.fee)}</td><td colspan="5"></td></tr><tr><td>Celkom</td><td>${money(A.T)}</td><td colspan="4"></td><td>${money(rl+rf+S.fee)}</td></tr>`:'');
-  draw();
-  try{localStorage.setItem('hypo-calc',JSON.stringify(S))}catch(e){}
-}
-
-const svg=$('chart');
-function draw(){
-  const W=svg.clientWidth,H=svg.clientHeight;if(!W||!A||!A.rows.length)return;
-  const rows=A.rows,narrow=W<520,L=narrow?8:56,R=8,T=12,Bm=28,iw=W-L-R,ih=H-T-Bm;
-  const mx=Math.max(...rows.map(r=>r.pr+r.in+r.fe))*1.15||1;
-  const bw=iw/rows.length,g=Math.min(6,bw*.25);
-  let s='';
-  if(!narrow)for(let k=0;k<=4;k++){const v=mx*k/4,yy=T+ih-ih*k/4;
-    s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${L-8}" y="${yy+4}" text-anchor="end" font-size="12" fill="var(--muted)">${short(v)}</text>`}
-  const every=Math.ceil(rows.length/(narrow?6:12));
-  rows.forEach((r,i)=>{
-    const x=L+i*bw+g/2,w=Math.max(1,bw-g),base=T+ih,hp=ih*r.pr/mx,hi=ih*r.in/mx,hf=ih*r.fe/mx;
-    s+=`<rect x="${x}" y="${base-hp}" width="${w}" height="${hp}" fill="var(--prin)"><title>${r.y}. rok – istina ${money(r.pr)}</title></rect>`;
-    s+=`<rect x="${x}" y="${base-hp-hi}" width="${w}" height="${hi}" fill="var(--acc)"><title>${r.y}. rok – úrok ${money(r.in)}</title></rect>`;
-    if(hf>0)s+=`<rect x="${x}" y="${base-hp-hi-hf}" width="${w}" height="${hf}" fill="var(--fee)"><title>${r.y}. rok – poplatky a poistenie ${money(r.fe)}</title></rect>`;
-    if(i%every===0||i===rows.length-1)s+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle" font-size="12" fill="var(--muted)">${r.y}</text>`;
-  });
-  s+=`<polyline points="${rows.map((r,i)=>`${L+i*bw+bw/2},${T+ih-ih*r.re/mx}`).join(' ')}" fill="none" stroke="var(--real)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
-  if(A.fixM){const fx=L+(A.fixM/12)*bw;
-    s+=`<line x1="${fx}" x2="${fx}" y1="${T}" y2="${T+ih}" stroke="var(--acc)" stroke-width="2" stroke-dasharray="5 4"/><text x="${fx+6}" y="${T+12}" font-size="12" font-weight="600" fill="var(--acc)">koniec fixácie</text>`}
-  svg.innerHTML=s;
-}
-const ro=new ResizeObserver(draw);ro.observe(svg);
-
-const NUM={fee:0,mfee:2,ins:2,fixY:0,rate2:2,xM:0,xOne:0,xYear:0};
-function syncInputs(){
-  const c=CUR[S.cur],mo=S.unit==='m',tm=Math.round(S.yrs*12);
-  Object.assign($('amtR'),{min:c.min,max:c.max,step:c.step});
-  $('amtMin').textContent=fmt(c.min);$('amtMax').textContent=fmt(c.max);
-  $('amt').value=fmt(S.amt);$('amtR').value=S.amt;$('cur').value=S.cur;
-  $('rate').value=nf(S.rate,2);$('rateR').value=S.rate;
-  Object.assign($('yrsR'),mo?{min:1,max:480,step:1}:{min:1,max:40,step:1});
-  $('tMin').textContent=mo?'1 mesiac':'1 rok';$('tMax').textContent=mo?'480 mesiacov':'40 rokov';
-  $('yrs').value=mo?tm:nf(S.yrs,2);$('yrsR').value=mo?tm:S.yrs;$('unit').value=S.unit;
-  $('inf').value=nf(S.inf,1);$('infR').value=S.inf;
-  for(const k in NUM)$(k).value=nf(S[k],NUM[k]);
-  $('insT').value=S.insT;$('xMode').value=S.xMode;
-}
-
-const bindR=(id,key,lo,hi)=>{
-  $(id).addEventListener('input',e=>{S[key]=Math.min(hi,Math.max(lo,parse(e.target.value)));$(id+'R').value=S[key];render()});
-  $(id).addEventListener('blur',syncInputs);
-  $(id+'R').addEventListener('input',e=>{S[key]=parse(e.target.value);syncInputs();render()});
-};
-bindR('amt','amt',0,1e10);bindR('rate','rate',0,50);bindR('inf','inf',0,30);
-const setTerm=v=>{const m=S.unit==='m'?v:v*12;S.yrs=Math.min(600,Math.max(1,Math.round(m)))/12};
-$('yrs').addEventListener('input',e=>{setTerm(parse(e.target.value));$('yrsR').value=S.unit==='m'?Math.round(S.yrs*12):S.yrs;render()});
-$('yrs').addEventListener('blur',syncInputs);
-$('yrsR').addEventListener('input',e=>{setTerm(parse(e.target.value));syncInputs();render()});
-for(const k in NUM){$(k).addEventListener('input',e=>{S[k]=Math.max(0,parse(e.target.value));render()});$(k).addEventListener('blur',syncInputs)}
-for(const k of ['unit','insT','xMode'])$(k).addEventListener('change',e=>{S[k]=e.target.value;syncInputs();render()});
-$('cur').addEventListener('change',e=>{
-  const k=e.target.value==='CZK'?25:1/25;S.cur=e.target.value;const c=CUR[S.cur];
-  S.amt=Math.round(S.amt*k/c.step)*c.step;
-  for(const f of ['fee','xM','xOne'])S[f]=Math.round(S[f]*k);
-  S.mfee=Math.round(S.mfee*k*100)/100;if(S.insT==='fix')S.ins=Math.round(S.ins*k*100)/100;
-  syncInputs();render()});
-$('f').addEventListener('submit',e=>e.preventDefault());
-
-syncInputs();render();
-}
-</script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

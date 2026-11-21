@@ -20,6 +20,18 @@
     xOne: 0,
     xYear: 5,
     xMode: 'kratsia',
+    country: 'SK',
+    price: 0,
+    income: 0,
+    otherPay: 0,
+    otherDebt: 0,
+    age: 30,
+    adults: '1',
+    kids: 0,
+    props: '0',
+    tax: false,
+    czLim: '150000',
+    czRate: '15',
   };
 
   const S = { ...D };
@@ -85,6 +97,133 @@
 
   // Zaokrúhlenie na centy (banka počíta splátky aj úroky v centoch)
   const c2 = (v) => Math.round(v * 100) / 100;
+
+  // ---------- Limity a dane podľa krajiny ----------
+
+  // Sumy pravidiel sú v mene krajiny; pri inej mene sa prepočítajú pevným kurzom 25 Kč / €.
+  const toCur = (v, from) => (from === S.cur ? v : from === 'EUR' ? v * 25 : v / 25);
+
+  // Životné minimum SR od 1. 7. 2026 do 30. 6. 2027
+  const ZM = { first: 295.22, other: 205.96, kid: 134.8 };
+
+  function afford(B) {
+    const sk = S.country === 'SK';
+    const n = B.n;
+    const age = S.age;
+    const props = +S.props;
+    const rows = [];
+    let maxP = Infinity;
+    let limBy = '';
+    const cap = (v, by) => {
+      if (v < maxP) {
+        maxP = v;
+        limBy = by;
+      }
+    };
+
+    // LTV
+    if (S.price > 0) {
+      let lim;
+      let why;
+      if (props >= 2) {
+        lim = 70;
+        why = sk ? 'tretia a ďalšia nehnuteľnosť' : 'investičná nehnuteľnosť (tretia a ďalšia)';
+      } else if (sk && age > 0 && age <= 35 && props === 0) {
+        lim = 90;
+        why = 'do 35 rokov, prvé bývanie';
+      } else if (!sk && age > 0 && age < 36) {
+        lim = 90;
+        why = 'žiadateľ do 36 rokov';
+      } else {
+        lim = 80;
+        why = 'štandardný limit';
+      }
+      rows.push({ nm: 'LTV – úver k hodnote nehnuteľnosti', why, v: (S.amt / S.price) * 100, lim, u: '%' });
+      cap((S.price * lim) / 100, 'LTV');
+    }
+
+    if (S.income > 0) {
+      // DSTI
+      if (sk) {
+        const zm = toCur(ZM.first + (+S.adults - 1) * ZM.other + S.kids * ZM.kid, 'EUR');
+        const base = S.income - zm;
+        // úroková rezerva NBS: +2 p. b., najviac do sadzby 6 %
+        const rs = S.rate >= 6 ? S.rate : Math.min(S.rate + 2, 6);
+        const payS = ann(S.amt, rs / 1200, n);
+        rows.push({
+          nm: 'DSTI – splátky k príjmu',
+          why: `príjem mínus životné minimum ${money(zm)}; splátka pri sadzbe ${nf(rs, 2)} % (rezerva NBS)`,
+          v: base > 0 ? ((payS + S.otherPay) / base) * 100 : Infinity,
+          lim: 60,
+          u: '%',
+        });
+        const maxPay = 0.6 * base - S.otherPay;
+        const r = rs / 1200;
+        cap(maxPay > 0 ? (r === 0 ? maxPay * n : (maxPay * (1 - Math.pow(1 + r, -n))) / r) : 0, 'DSTI');
+      } else {
+        rows.push({
+          nm: 'DSTI – splátky k príjmu',
+          why: 'limit ČNB je deaktivovaný, banka posudzuje podľa vlastných pravidiel',
+          v: ((B.fl[0].pay + S.otherPay) / S.income) * 100,
+          lim: null,
+          u: '%',
+        });
+      }
+
+      // DTI
+      let lim = null;
+      let why;
+      if (sk) {
+        lim = 8;
+        why = 'štandardný limit';
+        if (age >= 41 && age + n / 12 > 65) {
+          lim = Math.max(3, 8 - 0.25 * (Math.floor(age) - 40));
+          why = `znížený – vek ${age} rokov a splatnosť po 65. roku`;
+        }
+      } else if (props >= 2) {
+        lim = 7;
+        why = 'odporúčanie ČNB pre investičné nehnuteľnosti';
+      } else {
+        why = 'pri vlastnom bývaní je limit ČNB deaktivovaný';
+      }
+      rows.push({ nm: 'DTI – celkový dlh k ročnému príjmu', why, v: (S.amt + S.otherDebt) / (S.income * 12), lim, u: '×' });
+      if (lim != null) cap(lim * S.income * 12 - S.otherDebt, 'DTI');
+    }
+
+    return { rows, maxP: isFinite(maxP) ? Math.max(0, maxP) : null, limBy };
+  }
+
+  // Daňová úľava po rokoch úveru (rok úveru sa berie ako zdaňovacie obdobie)
+  function taxRelief(rows) {
+    if (!S.tax) return null;
+    if (S.country === 'SK') {
+      if (S.age > 35) return rows.map(() => 0);
+      const cap = toCur(1200, 'EUR');
+      return rows.map((r, i) => (i < 5 ? Math.min(r.in * 0.5, cap) : 0));
+    }
+    const lim = toCur(+S.czLim, 'CZK');
+    const rate = +S.czRate / 100;
+    return rows.map((r) => Math.min(r.in, lim) * rate);
+  }
+
+  const HINT = {
+    affSK:
+      'LTV podľa pravidiel NBS od 1. 1. 2027 (70 % pre tretiu a ďalšiu nehnuteľnosť od 1. 7. 2027). ' +
+      'Do konca roka 2026 platí 80 %, 90 % len ako výnimka banky. DSTI: najviac 60 % z príjmu po odpočítaní ' +
+      'životného minima. DTI: najviac 8-násobok ročného príjmu, od 41 rokov pri splatnosti po 65. roku menej.',
+    affCZ:
+      'LTV: 80 %, pre žiadateľov do 36 rokov 90 %. Investičná nehnuteľnosť (tretia a ďalšia, alebo nie na ' +
+      'vlastné bývanie, alebo keď sa do príjmu počíta nájomné): odporúčané LTV 70 % a DTI 7. DSTI a DTI sú ' +
+      'inak deaktivované.',
+    taxSK:
+      'Daňový bonus pri zmluvách od 1. 1. 2024: 50 % zo zaplatených úrokov, najviac 1 200 € ročne, počas ' +
+      'prvých 5 rokov. Podmienky: vek 18 – 35 rokov pri podaní žiadosti (berie sa vek z časti Dostupnosť) a ' +
+      'priemerný mesačný príjem v predchádzajúcom roku najviac 1,6-násobok priemernej mzdy (pre zmluvy v ' +
+      'roku 2026: 2 592 €). Nevzťahuje sa na spotrebné úvery, americké hypotéky ani refinancovanie.',
+    taxCZ:
+      'Odpočet zaplatených úrokov od základu dane, limit platí pre celú domácnosť. Úspora = odpočet × sadzba ' +
+      'dane. Neplatí pre americké hypotéky; poplatky a poistné sa neodpočítavajú.',
+  };
 
   // ---------- Calculation ----------
 
@@ -195,6 +334,8 @@
     $('bFee').classList.toggle('show', S.fee > 0 || S.mfee > 0 || S.ins > 0);
     $('bFix').classList.toggle('show', !!A.fixM);
     $('bX').classList.toggle('show', hasX);
+    $('bAff').classList.toggle('show', S.price > 0 || S.income > 0);
+    $('bTax').classList.toggle('show', !!S.tax);
 
     // Mesačná splátka
     $('pay').textContent = money(first.pay + first.fe, 2);
@@ -234,6 +375,60 @@
           `namiesto ${money(lb.pay + lb.fe, 2)} mesačne.`;
       }
       sv.innerHTML = `Mimoriadne splátky ti ušetria <b>${money(dI)}</b> na úrokoch` + tail;
+    }
+
+    // Dostupnosť
+    const sk = S.country === 'SK';
+    $('affHint').textContent = sk ? HINT.affSK : HINT.affCZ;
+    const AF = afford(B);
+    $('aff').hidden = !AF.rows.length;
+    if (AF.rows.length) {
+      $('affSrc').textContent = sk ? '(NBS)' : '(ČNB)';
+      const val = (r) => (r.v === Infinity ? '∞' : r.u === '%' ? nf(r.v, 1) + ' %' : nf(r.v, 2) + '×');
+      const lv = (r) => (r.u === '%' ? nf(r.lim, 0) + ' %' : nf(r.lim, 2) + '×');
+      $('affRows').innerHTML = AF.rows
+        .map((r) => {
+          const has = r.lim != null;
+          const over = has && r.v > r.lim + 1e-9;
+          const pill = !has
+            ? '<span class="pill na">bez limitu</span>'
+            : over
+              ? `<span class="pill bad">nad limitom ${lv(r)}</span>`
+              : `<span class="pill ok">v limite ${lv(r)}</span>`;
+          const bar = has
+            ? `<div class="bar${over ? ' over' : ''}"><i style="width:${Math.min(100, (r.v / r.lim) * 100)}%"></i></div>`
+            : '';
+          return `<div class="lim"><div class="nm">${r.nm}<small>${r.why}</small></div><div class="v">${val(r)}</div>${pill}${bar}</div>`;
+        })
+        .join('');
+      if (AF.maxP != null) {
+        const diff = S.amt - AF.maxP;
+        $('affMax').innerHTML =
+          `Najvyšší úver podľa limitov: <b>${money(AF.maxP)}</b> (obmedzuje ${AF.limBy})` +
+          (diff > 0.5 ? ` – zadaný úver je o <b>${money(diff)}</b> vyšší.` : '.');
+      } else {
+        $('affMax').textContent = '';
+      }
+    }
+
+    // Daňová úľava
+    $('taxHint').textContent = sk ? HINT.taxSK : HINT.taxCZ;
+    $('taxCZ').hidden = sk;
+    const TR = taxRelief(A.rows);
+    const tb = $('taxBox');
+    tb.hidden = !TR;
+    let TRsum = 0;
+    if (TR) {
+      TRsum = TR.reduce((a, b) => a + b, 0);
+      if (sk && S.age > 35) {
+        tb.innerHTML =
+          'Na daňový bonus nemáš nárok: je len pre žiadateľov do 35 rokov (vek zadaný v časti Dostupnosť).';
+      } else {
+        tb.innerHTML =
+          `${sk ? 'Daňový bonus' : 'Odpočet úrokov'} ti vráti spolu <b>${money(TRsum)}</b>` +
+          ` (v 1. roku ${money(TR[0])}${sk ? ', počas prvých 5 rokov' : ''}). ` +
+          `Úroky po úľave: <b>${money(A.I - TRsum)}</b>, celkom zaplatíš po úľave <b>${money(A.T - TRsum)}</b>.`;
+      }
     }
 
     // Pomer istina / úroky / poplatky
@@ -286,13 +481,17 @@
 
     // Splátkový kalendár
     const fixYr = A.fixM / 12;
+    const heads = ['Rok', 'Zaplatené spolu', 'Istina', 'Úrok', 'Poplatky a poistenie', 'Zostatok', 'V dnešných peniazoch'];
+    if (TR) heads.push(sk ? 'Daňový bonus' : 'Úspora na dani');
+    $('th').innerHTML = '<tr>' + heads.map((t) => `<th>${t}</th>`).join('') + '</tr>';
+
     // Tabuľka počíta na centy: každá zložka sa zaokrúhli raz a súčty sa robia
     // zo zaokrúhlených hodnôt, aby riadky aj stĺpce sedeli presne.
-    const RR = A.rows.map((r) => {
+    const RR = A.rows.map((r, i) => {
       const pr = c2(r.pr);
       const inn = c2(r.in);
       const fe = c2(r.fe);
-      return { y: r.y, pr, in: inn, fe, tot: c2(pr + inn + fe), bal: c2(r.bal), re: c2(r.re) };
+      return { y: r.y, pr, in: inn, fe, tot: c2(pr + inn + fe), bal: c2(r.bal), re: c2(r.re), tr: TR ? c2(TR[i]) : 0 };
     });
     const sum = (k) => c2(RR.reduce((a, r) => a + r[k], 0));
     const m2 = (v) => money(v, 2);
@@ -308,6 +507,7 @@
         `<td>${m2(r.fe)}</td>` +
         `<td>${m2(r.bal)}</td>` +
         `<td>${m2(r.re)}</td>` +
+        (TR ? `<td class="t">${m2(r.tr)}</td>` : '') +
         `</tr>`
       );
     }).join('');
@@ -323,11 +523,12 @@
       `<td>${m2(sum('fe'))}</td>` +
       `<td></td>` +
       `<td>${m2(reAll)}</td>` +
+      (TR ? `<td class="t">${m2(sum('tr'))}</td>` : '') +
       `</tr>`;
     if (S.fee > 0) {
       foot +=
-        `<tr><td>+ jednorazový poplatok</td><td>${m2(S.fee)}</td><td colspan="5"></td></tr>` +
-        `<tr><td>Celkom</td><td>${m2(c2(totAll + S.fee))}</td><td colspan="4"></td><td>${m2(c2(reAll + S.fee))}</td></tr>`;
+        `<tr><td>+ jednorazový poplatok</td><td>${m2(S.fee)}</td><td colspan="${TR ? 6 : 5}"></td></tr>` +
+        `<tr><td>Celkom</td><td>${m2(c2(totAll + S.fee))}</td><td colspan="4"></td><td>${m2(c2(reAll + S.fee))}</td>${TR ? '<td></td>' : ''}</tr>`;
     }
     $('tf').innerHTML = foot;
 
@@ -419,7 +620,11 @@
   // ---------- Inputs ----------
 
   // Číselné polia bez posuvníka → počet desatinných miest
-  const NUM = { fee: 0, mfee: 2, ins: 2, fixY: 0, rate2: 2, xM: 0, xOne: 0, xYear: 0 };
+  const NUM = {
+    fee: 0, mfee: 2, ins: 2, fixY: 0, rate2: 2, xM: 0, xOne: 0, xYear: 0,
+    price: 0, income: 0, otherPay: 0, otherDebt: 0, age: 0, kids: 0,
+  };
+  const SEL = ['unit', 'insT', 'xMode', 'country', 'adults', 'props', 'czLim', 'czRate'];
 
   function syncInputs() {
     const c = CUR[S.cur];
@@ -447,8 +652,8 @@
     $('infR').value = S.inf;
 
     for (const k in NUM) $(k).value = nf(S[k], NUM[k]);
-    $('insT').value = S.insT;
-    $('xMode').value = S.xMode;
+    for (const k of SEL) $(k).value = S[k];
+    $('tax').checked = !!S.tax;
   }
 
   // Textové pole + posuvník
@@ -496,13 +701,18 @@
     $(k).addEventListener('blur', syncInputs);
   }
 
-  for (const k of ['unit', 'insT', 'xMode']) {
+  for (const k of SEL) {
     $(k).addEventListener('change', (e) => {
       S[k] = e.target.value;
       syncInputs();
       render();
     });
   }
+
+  $('tax').addEventListener('change', (e) => {
+    S.tax = e.target.checked;
+    render();
+  });
 
   // Zmena meny prepočíta sumy kurzom 25 Kč / €
   $('cur').addEventListener('change', (e) => {
@@ -514,6 +724,8 @@
     for (const f of ['fee', 'xM', 'xOne']) S[f] = Math.round(S[f] * k);
     S.mfee = Math.round(S.mfee * k * 100) / 100;
     if (S.insT === 'fix') S.ins = Math.round(S.ins * k * 100) / 100;
+    for (const f of ['price', 'income', 'otherPay', 'otherDebt']) S[f] = Math.round(S[f] * k);
+    S.country = S.cur === 'CZK' ? 'CZ' : 'SK';
 
     syncInputs();
     render();

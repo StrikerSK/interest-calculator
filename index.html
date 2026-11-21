@@ -71,6 +71,14 @@
               <div class="range-ends"><span>0 %</span><span>10 %</span></div>
             </div>
 
+            <div class="field">
+              <label for="country" class="lab">Pravidlá pre limity a dane</label>
+              <select id="country" class="full">
+                <option value="SK">Slovensko (NBS, slovenské dane)</option>
+                <option value="CZ">Česko (ČNB, české dane)</option>
+              </select>
+            </div>
+
             <details id="dFee">
               <summary>Poplatky a poistenie <span class="on" id="bFee">zapnuté</span></summary>
               <div class="inner">
@@ -161,6 +169,92 @@
                 </p>
               </div>
             </details>
+
+            <details id="dAff">
+              <summary>Dostupnosť úveru (LTV, DSTI, DTI) <span class="on" id="bAff">zapnuté</span></summary>
+              <div class="inner">
+                <div class="field">
+                  <div class="lab">
+                    <label for="price">Hodnota nehnuteľnosti</label>
+                    <div class="inbox"><input id="price" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="income">Čistý mesačný príjem domácnosti</label>
+                    <div class="inbox"><input id="income" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="otherPay">Splátky iných úverov mesačne</label>
+                    <div class="inbox"><input id="otherPay" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="otherDebt">Zostatok iných úverov</label>
+                    <div class="inbox"><input id="otherDebt" inputmode="decimal"><span class="cs">€</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="age">Vek (staršieho) žiadateľa</label>
+                    <div class="inbox"><input id="age" inputmode="numeric"><span>rokov</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="adults">Dospelí v domácnosti</label>
+                    <div class="inbox">
+                      <select id="adults" aria-label="Počet dospelých">
+                        <option value="1">1 dospelý</option>
+                        <option value="2">2 dospelí</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="lab">
+                    <label for="kids">Deti</label>
+                    <div class="inbox"><input id="kids" inputmode="numeric"><span>detí</span></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="props" class="lab">Nehnuteľnosti na bývanie, ktoré už vlastníš</label>
+                  <select id="props" class="full">
+                    <option value="0">Žiadnu – kupujem prvé bývanie</option>
+                    <option value="1">Jednu</option>
+                    <option value="2">Dve a viac</option>
+                  </select>
+                </div>
+                <p class="hint" id="affHint"></p>
+              </div>
+            </details>
+
+            <details id="dTax">
+              <summary>Daňová úľava na úrokoch <span class="on" id="bTax">zapnuté</span></summary>
+              <div class="inner">
+                <label class="check"><input type="checkbox" id="tax"> Uplatním daňovú úľavu na zaplatené úroky</label>
+                <div id="taxCZ">
+                  <div class="field">
+                    <label for="czLim" class="lab">Ročný limit odpočtu</label>
+                    <select id="czLim" class="full">
+                      <option value="150000">150 000 Kč – zmluva od 1. 1. 2021</option>
+                      <option value="300000">300 000 Kč – zmluva do 31. 12. 2020</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="czRate" class="lab">Sadzba dane z príjmu</label>
+                    <select id="czRate" class="full">
+                      <option value="15">15 %</option>
+                      <option value="23">23 % (vyššie príjmy)</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="hint" id="taxHint"></p>
+              </div>
+            </details>
           </form>
 
           <!-- Výsledok -->
@@ -177,6 +271,14 @@
             </div>
 
             <div class="save" id="save"></div>
+
+            <div class="aff" id="aff" hidden>
+              <div class="k">Dostupnosť podľa limitov <span id="affSrc"></span></div>
+              <div id="affRows"></div>
+              <div class="sub" id="affMax"></div>
+            </div>
+
+            <div class="taxbox" id="taxBox" hidden></div>
 
             <div class="split" role="img" aria-label="Pomer istiny, úrokov a poplatkov">
               <i id="sP" style="background: var(--prin)"></i>
@@ -204,7 +306,7 @@
 
             <p class="note">
               Anuitné splácanie s mesačným úročením. Inflácia sa uvažuje ako konštantná. Skutočná ponuka banky sa
-              môže líšiť.
+              môže líšiť. Limity a daňové pravidlá sú zjednodušené a orientačné, o úvere rozhoduje banka.
             </p>
           </section>
         </div>
@@ -231,17 +333,7 @@
         <h2>Splátkový kalendár po rokoch</h2>
         <div class="scroll">
           <table>
-            <thead>
-              <tr>
-                <th>Rok</th>
-                <th>Zaplatené spolu</th>
-                <th>Istina</th>
-                <th>Úrok</th>
-                <th>Poplatky a poistenie</th>
-                <th>Zostatok</th>
-                <th>V dnešných peniazoch</th>
-              </tr>
-            </thead>
+            <thead id="th"></thead>
             <tbody id="tb"></tbody>
             <tfoot id="tf"></tfoot>
           </table>

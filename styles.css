@@ -149,7 +149,7 @@ h2 {
 
 .inbox select {
   border: 0;
-  background: transparent;
+  background-color: transparent;
   width: auto;
   padding: 0 2px;
   min-height: 44px;
@@ -177,7 +177,7 @@ select.full {
   min-height: 44px;
   border-radius: 10px;
   border: 1.5px solid var(--line);
-  background: var(--soft);
+  background-color: var(--soft);
   color: var(--ink);
   padding: 0 10px;
   width: 100%;
@@ -618,8 +618,30 @@ td.t {
   padding: 0 10px;
   border: 1.5px solid var(--line);
   border-radius: 10px;
-  background: var(--panel);
+  background-color: var(--panel);
   color: var(--ink);
   font: 500 14px Inter, sans-serif;
   cursor: pointer;
+}
+
+/* ---------- Select arrow ---------- */
+
+/* Vlastná šípka namiesto natívnej: rovnaký vzhľad a odsadenie vo všetkých prehliadačoch */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237088a1' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 11px 8px;
+  background-position: right 12px center;
+}
+
+select.full,
+#lang {
+  padding-right: 36px;
+}
+
+.inbox select {
+  padding-right: 18px;
+  background-position: right 2px center;
 }

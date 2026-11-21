@@ -55,11 +55,13 @@
   if (!I18N[S.lang]) S.lang = D.lang;
 
   // Preklad: text s {parametrami} alebo funkcia zo slovníka
-  const t = (k, v) => {
-    const x = I18N[S.lang][k] ?? I18N.sk[k] ?? k;
+  const tr = (lang, k, v) => {
+    const x = I18N[lang][k] ?? I18N.sk[k] ?? k;
     if (typeof x === 'function') return x(v);
     return v && typeof x === 'string' ? x.replace(/\{(\w+)\}/g, (_, n) => v[n]) : x;
   };
+  const t = (k, v) => tr(S.lang, k, v);
+  const LANGS = Object.keys(I18N);
 
   function applyLang() {
     document.documentElement.lang = S.lang;
@@ -744,8 +746,37 @@
 
   $('f').addEventListener('submit', (e) => e.preventDefault());
 
+  // ---------- Stále šírky polí ----------
+  // Polia sa nemajú rozťahovať pri zmene jazyka ani meny: šírka sa počíta z najdlhšieho
+  // textu, ktorý v nich môže byť.
+
+  const SYMS = Object.values(CUR).map((c) => c.sym);
+
+  CustomSelect.sizer = (sel, o, i) => {
+    if (o.dataset.i18n) return LANGS.map((l) => tr(l, o.dataset.i18n));
+    if (sel.id === 'insT' && i === 0) return LANGS.flatMap((l) => SYMS.map((sym) => tr(l, 'insFix', { sym })));
+    return [];
+  };
+
+  const measure = document.createElement('canvas').getContext('2d');
+
+  function fixUnitWidths() {
+    for (const e of document.querySelectorAll('.inbox > span')) {
+      const texts = e.dataset.i18n
+        ? LANGS.map((l) => tr(l, e.dataset.i18n))
+        : e.classList.contains('cs')
+          ? SYMS
+          : [e.textContent];
+      const cs = getComputedStyle(e);
+      measure.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      e.style.minWidth = Math.ceil(Math.max(...texts.map((x) => measure.measureText(x).width))) + 'px';
+    }
+  }
+
   // ---------- Init ----------
 
+  fixUnitWidths();
+  document.fonts?.ready.then(fixUnitWidths);
   CustomSelect.init();
   applyLang();
   syncInputs();

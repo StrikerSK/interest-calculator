@@ -605,10 +605,6 @@ td.t {
     justify-self: start;
   }
 }
-.inbox span:empty {
-  display: none;
-}
-
 .head {
   display: flex;
   justify-content: space-between;
@@ -677,14 +673,24 @@ select.full,
 }
 
 .cs-btn {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
   width: 100%;
   margin: 0;
   text-align: left;
+  cursor: pointer;
+}
+
+.cs-btn > span {
+  grid-area: 1 / 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
+}
+
+.cs-btn > span[aria-hidden] {
+  visibility: hidden;
 }
 
 .cs-list {

@@ -114,8 +114,26 @@
     }
 
     function sync() {
-      const o = sel.options[sel.selectedIndex];
-      btn.textContent = o ? o.text : '';
+      // Všetky texty sú v tlačidle na sebe v jednej bunke mriežky; viditeľný je len vybraný.
+      // Tlačidlo tak má vždy šírku najdlhšej možnosti a pri výbere sa nemení (ako natívny select).
+      btn.textContent = '';
+      [...sel.options].forEach((o, i) => {
+        const sp = document.createElement('span');
+        sp.textContent = o.text;
+        if (i !== sel.selectedIndex) sp.setAttribute('aria-hidden', 'true');
+        btn.appendChild(sp);
+      });
+      // Ďalšie neviditeľné texty, ktoré môže možnosť mať (napr. v iných jazykoch), aby sa šírka nemenila ani pri ich zmene
+      if (window.CustomSelect.sizer) {
+        [...sel.options].forEach((o, i) => {
+          for (const txt of window.CustomSelect.sizer(sel, o, i) || []) {
+            const sp = document.createElement('span');
+            sp.textContent = txt;
+            sp.setAttribute('aria-hidden', 'true');
+            btn.appendChild(sp);
+          }
+        });
+      }
       if (!lab) {
         const al = sel.getAttribute('aria-label');
         if (al) {
@@ -182,6 +200,8 @@
   }
 
   window.CustomSelect = {
+    // (select, option, index) => pole ďalších textov, podľa ktorých sa má počítať šírka
+    sizer: null,
     init(root = document) {
       for (const s of root.querySelectorAll('select')) enhance(s);
     },

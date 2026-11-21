@@ -83,6 +83,9 @@
     return (P * r) / (1 - Math.pow(1 + r, -n));
   };
 
+  // Zaokrúhlenie na centy (banka počíta splátky aj úroky v centoch)
+  const c2 = (v) => Math.round(v * 100) / 100;
+
   // ---------- Calculation ----------
 
   // Simulácia mesiac po mesiaci. extras=false → zmluvný priebeh (pre RPMN a porovnanie).
@@ -97,7 +100,7 @@
 
     let bal = P;
     let r = r1;
-    let M = ann(P, r1, n);
+    let M = c2(ann(P, r1, n));
     let m = 0;
     let I = 0;
     let FE = 0;
@@ -114,22 +117,22 @@
         let left = r > 0 ? -Math.log(1 - (bal * r) / M) / Math.log(1 + r) : bal / M;
         if (!isFinite(left) || left < 1) left = n - m + 1;
         r = r2;
-        M = ann(bal, r2, Math.min(n - m + 1, Math.ceil(left - 1e-6)));
+        M = c2(ann(bal, r2, Math.min(n - m + 1, Math.ceil(left - 1e-6))));
       }
 
-      const it = bal * r;
+      const it = c2(bal * r);
       let pr = Math.min(bal, M - it);
       if (m === n) pr = bal;
-      bal -= pr;
+      bal = c2(bal - pr);
 
       let ex = 0;
       if (bal > 0.005) {
         ex = Math.min(bal, xm + (m === oneM ? S.xOne : 0));
-        bal -= ex;
+        bal = c2(bal - ex);
       }
 
       const pay = pr + it;
-      const fe = S.mfee + (S.insT === 'pct' ? (pay * S.ins) / 100 : S.ins);
+      const fe = c2(S.mfee + (S.insT === 'pct' ? (pay * S.ins) / 100 : S.ins));
 
       fl.push({ pay, ex, fe });
       I += it;
@@ -139,7 +142,7 @@
       y.in += it;
       y.fe += fe;
 
-      if (ex > 0 && S.xMode === 'nizsia' && bal > 0.005) M = ann(bal, r, n - m);
+      if (ex > 0 && S.xMode === 'nizsia' && bal > 0.005) M = c2(ann(bal, r, n - m));
 
       if (m % 12 === 0 || bal <= 0.005 || m === n) {
         rows.push({ y: Math.ceil(m / 12), ...y, bal: Math.max(0, bal) });
@@ -283,37 +286,48 @@
 
     // Splátkový kalendár
     const fixYr = A.fixM / 12;
-    $('tb').innerHTML = A.rows
-      .map((r) => {
-        const attrs = r.y === fixYr ? ' class="fx" title="Koniec fixácie"' : '';
-        return (
-          `<tr${attrs}>` +
-          `<td>${r.y}.</td>` +
-          `<td>${money(r.pr + r.in + r.fe)}</td>` +
-          `<td>${money(r.pr)}</td>` +
-          `<td class="i">${money(r.in)}</td>` +
-          `<td>${money(r.fe)}</td>` +
-          `<td>${money(r.bal)}</td>` +
-          `<td>${money(r.re)}</td>` +
-          `</tr>`
-        );
-      })
-      .join('');
+    // Tabuľka počíta na centy: každá zložka sa zaokrúhli raz a súčty sa robia
+    // zo zaokrúhlených hodnôt, aby riadky aj stĺpce sedeli presne.
+    const RR = A.rows.map((r) => {
+      const pr = c2(r.pr);
+      const inn = c2(r.in);
+      const fe = c2(r.fe);
+      return { y: r.y, pr, in: inn, fe, tot: c2(pr + inn + fe), bal: c2(r.bal), re: c2(r.re) };
+    });
+    const sum = (k) => c2(RR.reduce((a, r) => a + r[k], 0));
+    const m2 = (v) => money(v, 2);
 
+    $('tb').innerHTML = RR.map((r) => {
+      const attrs = r.y === fixYr ? ' class="fx" title="Koniec fixácie"' : '';
+      return (
+        `<tr${attrs}>` +
+        `<td>${r.y}.</td>` +
+        `<td>${m2(r.tot)}</td>` +
+        `<td>${m2(r.pr)}</td>` +
+        `<td class="i">${m2(r.in)}</td>` +
+        `<td>${m2(r.fe)}</td>` +
+        `<td>${m2(r.bal)}</td>` +
+        `<td>${m2(r.re)}</td>` +
+        `</tr>`
+      );
+    }).join('');
+
+    const totAll = sum('tot');
+    const reAll = sum('re');
     let foot =
       `<tr>` +
       `<td>Spolu</td>` +
-      `<td>${money(A.P + A.I + A.FE)}</td>` +
-      `<td>${money(A.P)}</td>` +
-      `<td class="i">${money(A.I)}</td>` +
-      `<td>${money(A.FE)}</td>` +
+      `<td>${m2(totAll)}</td>` +
+      `<td>${m2(sum('pr'))}</td>` +
+      `<td class="i">${m2(sum('in'))}</td>` +
+      `<td>${m2(sum('fe'))}</td>` +
       `<td></td>` +
-      `<td>${money(rl + rf)}</td>` +
+      `<td>${m2(reAll)}</td>` +
       `</tr>`;
     if (S.fee > 0) {
       foot +=
-        `<tr><td>+ jednorazový poplatok</td><td>${money(S.fee)}</td><td colspan="5"></td></tr>` +
-        `<tr><td>Celkom</td><td>${money(A.T)}</td><td colspan="4"></td><td>${money(rl + rf + S.fee)}</td></tr>`;
+        `<tr><td>+ jednorazový poplatok</td><td>${m2(S.fee)}</td><td colspan="5"></td></tr>` +
+        `<tr><td>Celkom</td><td>${m2(c2(totAll + S.fee))}</td><td colspan="4"></td><td>${m2(c2(reAll + S.fee))}</td></tr>`;
     }
     $('tf').innerHTML = foot;
 

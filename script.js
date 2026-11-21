@@ -453,7 +453,7 @@
   };
 
   bindR('amt', 'amt', 0, 1e10);
-  bindR('rate', 'rate', 0, 50);
+  bindR('rate', 'rate', 0, 100);
   bindR('inf', 'inf', 0, 30);
 
   // Doba splácania (roky alebo mesiace)

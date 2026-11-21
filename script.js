@@ -535,6 +535,7 @@
     $('tf').innerHTML = foot;
 
     draw();
+    CustomSelect.sync();
 
     try {
       localStorage.setItem('hypo-calc', JSON.stringify(S));
@@ -656,6 +657,7 @@
     for (const k in NUM) $(k).value = nf(S[k], NUM[k]);
     for (const k of SEL) $(k).value = S[k];
     $('tax').checked = !!S.tax;
+    CustomSelect.sync();
   }
 
   // Textové pole + posuvník
@@ -744,6 +746,7 @@
 
   // ---------- Init ----------
 
+  CustomSelect.init();
   applyLang();
   syncInputs();
   render();

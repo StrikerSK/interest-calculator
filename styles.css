@@ -147,7 +147,8 @@ h2 {
   font-size: 14px;
 }
 
-.inbox select {
+.inbox select,
+.inbox .cs-btn {
   border: 0;
   background-color: transparent;
   width: auto;
@@ -172,7 +173,8 @@ input[type="range"] {
   color: var(--muted);
 }
 
-select.full {
+select.full,
+.cs-wrap.full .cs-btn {
   font: 500 16px Inter, sans-serif;
   min-height: 44px;
   border-radius: 10px;
@@ -184,6 +186,7 @@ select.full {
 }
 
 select:focus-visible,
+.cs-btn:focus-visible,
 summary:focus-visible {
   outline: 3px solid rgba(79, 179, 232, 0.45);
   outline-offset: 2px;
@@ -469,8 +472,9 @@ tr.fx td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .split i {
-    transition: none;
+  .split i,
+  .cs-list {
+    transition: none !important;
   }
 }
 
@@ -613,7 +617,8 @@ td.t {
   flex-wrap: wrap;
 }
 
-#lang {
+#lang,
+.cs-wrap.lang .cs-btn {
   min-height: 40px;
   padding: 0 10px;
   border: 1.5px solid var(--line);
@@ -627,7 +632,8 @@ td.t {
 /* ---------- Select arrow ---------- */
 
 /* Vlastná šípka namiesto natívnej: rovnaký vzhľad a odsadenie vo všetkých prehliadačoch */
-select {
+select,
+.cs-btn {
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237088a1' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -637,11 +643,138 @@ select {
 }
 
 select.full,
-#lang {
+#lang,
+.cs-wrap.full .cs-btn,
+.cs-wrap.lang .cs-btn {
   padding-right: 36px;
 }
 
-.inbox select {
-  padding-right: 18px;
+.inbox select,
+.inbox .cs-btn {
+  padding-right: 20px;
   background-position: right 2px center;
+}
+
+/* ---------- Custom dropdown (select.js) ---------- */
+
+.cs-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.cs-wrap.full {
+  display: block;
+}
+
+/* Natívny select ostáva v DOM kvôli hodnote a udalostiam, len je skrytý */
+.cs-wrap > select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(50%);
+}
+
+.cs-btn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.cs-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px -14px rgba(16, 34, 58, 0.45);
+
+  /* Zatvorený: zrolovaný k poľu, neviditeľný a neklikateľný */
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  clip-path: inset(0 -30px 100% -30px round 12px);
+  transition:
+    clip-path 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.16s ease,
+    visibility 0s linear 0.24s;
+}
+
+/* Otvorený: plynulo sa vyroluje (okraje -30/-50px nechajú vidieť tieň) */
+.cs-wrap.open .cs-list {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
+  clip-path: inset(-30px -30px -50px -30px round 12px);
+  transition-delay: 0s;
+}
+
+.cs-wrap.up .cs-list {
+  transform: translateY(6px);
+  clip-path: inset(100% -30px 0 -30px round 12px);
+}
+
+.cs-wrap.up.open .cs-list {
+  transform: none;
+  clip-path: inset(-30px -30px -50px -30px round 12px);
+}
+
+.inbox .cs-list,
+.cs-wrap.lang .cs-list {
+  left: auto;
+  right: 0;
+  width: max-content;
+}
+
+/* zarovnať s pravým okrajom rámčeka .inbox (padding 12px + rámik) */
+.inbox .cs-list {
+  right: -13.5px;
+}
+
+.cs-wrap.up .cs-list {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.cs-list li {
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--ink);
+  font: 500 15px/1.35 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.cs-list li.active {
+  background: var(--soft);
+}
+
+.cs-list li[aria-selected="true"] {
+  color: light-dark(#1a7fb8, #4fb3e8);
+  font-weight: 600;
+}
+
+/* v .inbox fokus zvýrazňuje celý rámček (.inbox:focus-within) */
+.inbox .cs-btn:focus-visible {
+  outline: none;
+}
+
+.cs-list li {
+  transition: background-color 0.12s ease;
 }

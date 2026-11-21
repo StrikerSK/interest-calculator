@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Úverová kalkulačka</title>
+    <title data-i18n="title">Úverová kalkulačka</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,8 +13,15 @@
   <body>
     <header class="band top">
       <div class="wrap">
-        <h1>Úverová kalkulačka</h1>
-        <p class="lead">
+        <div class="head">
+          <h1 data-i18n="title">Úverová kalkulačka</h1>
+          <select id="lang" data-i18n-aria="langAria" aria-label="Jazyk">
+            <option value="sk">Slovenčina</option>
+            <option value="cs">Čeština</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <p class="lead" data-i18n="lead">
           Pre hypotéky, spotrebné úvery, pôžičky na auto aj iné úvery splácané rovnakými mesačnými splátkami.
           Zadaj výšku úveru, sadzbu a dobu splácania; v rozbaľovacích častiach doplníš poplatky, poistenie,
           fixáciu a mimoriadne splátky.
@@ -25,88 +32,88 @@
           <form class="card" id="f" autocomplete="off">
             <div class="field">
               <div class="lab">
-                <label for="amt">Výška úveru</label>
+                <label for="amt" data-i18n="amt">Výška úveru</label>
                 <div class="inbox">
                   <input id="amt" inputmode="decimal">
-                  <select id="cur" aria-label="Mena">
+                  <select id="cur" data-i18n-aria="curAria" aria-label="Mena">
                     <option value="EUR">€</option>
                     <option value="CZK">Kč</option>
                   </select>
                 </div>
               </div>
-              <input type="range" id="amtR" aria-label="Výška úveru posuvník">
+              <input type="range" id="amtR" data-i18n-aria="amtR" aria-label="Výška úveru posuvník">
               <div class="range-ends"><span id="amtMin"></span><span id="amtMax"></span></div>
             </div>
 
             <div class="field">
               <div class="lab">
-                <label for="rate">Úroková sadzba (p. a.)</label>
+                <label for="rate" data-i18n="rate">Úroková sadzba (p. a.)</label>
                 <div class="inbox"><input id="rate" inputmode="decimal"><span>%</span></div>
               </div>
-              <input type="range" id="rateR" min="0" max="30" step="0.05" aria-label="Úroková sadzba posuvník">
+              <input type="range" id="rateR" min="0" max="30" step="0.05" data-i18n-aria="rateR" aria-label="Úroková sadzba posuvník">
               <div class="range-ends"><span>0 %</span><span>30 %</span></div>
             </div>
 
             <div class="field">
               <div class="lab">
-                <label for="yrs">Doba splácania</label>
+                <label for="yrs" data-i18n="yrs">Doba splácania</label>
                 <div class="inbox">
                   <input id="yrs" inputmode="decimal">
-                  <select id="unit" aria-label="Jednotka doby splácania">
-                    <option value="y">rokov</option>
-                    <option value="m">mesiacov</option>
+                  <select id="unit" data-i18n-aria="unitAria" aria-label="Jednotka doby splácania">
+                    <option value="y" data-i18n="unitY">rokov</option>
+                    <option value="m" data-i18n="unitM">mesiacov</option>
                   </select>
                 </div>
               </div>
-              <input type="range" id="yrsR" aria-label="Doba splácania posuvník">
+              <input type="range" id="yrsR" data-i18n-aria="yrsR" aria-label="Doba splácania posuvník">
               <div class="range-ends"><span id="tMin"></span><span id="tMax"></span></div>
             </div>
 
             <div class="field">
               <div class="lab">
-                <label for="inf">Priemerná inflácia (p. a.)</label>
+                <label for="inf" data-i18n="inf">Priemerná inflácia (p. a.)</label>
                 <div class="inbox"><input id="inf" inputmode="decimal"><span>%</span></div>
               </div>
-              <input type="range" id="infR" min="0" max="10" step="0.1" aria-label="Inflácia posuvník">
+              <input type="range" id="infR" min="0" max="10" step="0.1" data-i18n-aria="infR" aria-label="Inflácia posuvník">
               <div class="range-ends"><span>0 %</span><span>10 %</span></div>
             </div>
 
             <div class="field">
-              <label for="country" class="lab">Pravidlá pre limity a dane</label>
+              <label for="country" class="lab" data-i18n="country">Pravidlá pre limity a dane</label>
               <select id="country" class="full">
-                <option value="SK">Slovensko (NBS, slovenské dane)</option>
-                <option value="CZ">Česko (ČNB, české dane)</option>
+                <option value="SK" data-i18n="countrySK">Slovensko (NBS, slovenské dane)</option>
+                <option value="CZ" data-i18n="countryCZ">Česko (ČNB, české dane)</option>
               </select>
             </div>
 
             <details id="dFee">
-              <summary>Poplatky a poistenie <span class="on" id="bFee">zapnuté</span></summary>
+              <summary><span data-i18n="dFee">Poplatky a poistenie</span> <span class="on" data-i18n="on" id="bFee">zapnuté</span></summary>
               <div class="inner">
                 <div class="field">
                   <div class="lab">
-                    <label for="fee">Jednorazový poplatok</label>
+                    <label for="fee" data-i18n="fee">Jednorazový poplatok</label>
                     <div class="inbox"><input id="fee" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="mfee">Mesačný poplatok (vedenie účtu)</label>
+                    <label for="mfee" data-i18n="mfee">Mesačný poplatok (vedenie účtu)</label>
                     <div class="inbox"><input id="mfee" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="ins">Poistenie úveru</label>
+                    <label for="ins" data-i18n="ins">Poistenie úveru</label>
                     <div class="inbox">
                       <input id="ins" inputmode="decimal">
-                      <select id="insT" aria-label="Typ poistenia">
+                      <select id="insT" data-i18n-aria="insTAria" aria-label="Typ poistenia">
                         <option value="fix">€ mesačne</option>
-                        <option value="pct">% zo splátky</option>
+                        <option value="pct" data-i18n="insPct">% zo splátky</option>
                       </select>
                     </div>
                   </div>
                 </div>
-                <p class="hint">
+                <p class="hint" data-i18n="hintIns">
                   Poistenie sa platí s každou splátkou. Pri voľbe „% zo splátky“ sa počíta z aktuálnej splátky
                   istiny a úroku.
                 </p>
@@ -114,21 +121,21 @@
             </details>
 
             <details id="dFix">
-              <summary>Fixácia a zmena sadzby <span class="on" id="bFix">zapnuté</span></summary>
+              <summary><span data-i18n="dFix">Fixácia a zmena sadzby</span> <span class="on" data-i18n="on" id="bFix">zapnuté</span></summary>
               <div class="inner">
                 <div class="field">
                   <div class="lab">
-                    <label for="fixY">Dĺžka fixácie</label>
-                    <div class="inbox"><input id="fixY" inputmode="numeric"><span>rokov</span></div>
+                    <label for="fixY" data-i18n="fixY">Dĺžka fixácie</label>
+                    <div class="inbox"><input id="fixY" inputmode="numeric"><span data-i18n="unitY">rokov</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="rate2">Sadzba po fixácii</label>
+                    <label for="rate2" data-i18n="rate2">Sadzba po fixácii</label>
                     <div class="inbox"><input id="rate2" inputmode="decimal"><span>%</span></div>
                   </div>
                 </div>
-                <p class="hint">
+                <p class="hint" data-i18n="hintFix">
                   0 rokov = sadzba platí počas celej doby. Po skončení fixácie sa splátka prepočíta na zvyšný
                   zostatok a zvyšnú dobu.
                 </p>
@@ -136,34 +143,34 @@
             </details>
 
             <details id="dX">
-              <summary>Mimoriadne splátky <span class="on" id="bX">zapnuté</span></summary>
+              <summary><span data-i18n="dX">Mimoriadne splátky</span> <span class="on" data-i18n="on" id="bX">zapnuté</span></summary>
               <div class="inner">
                 <div class="field">
                   <div class="lab">
-                    <label for="xM">Pravidelne navyše každý mesiac</label>
+                    <label for="xM" data-i18n="xM">Pravidelne navyše každý mesiac</label>
                     <div class="inbox"><input id="xM" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="xOne">Jednorazová splátka</label>
+                    <label for="xOne" data-i18n="xOne">Jednorazová splátka</label>
                     <div class="inbox"><input id="xOne" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="xYear">Jednorazovú zaplatím na konci</label>
-                    <div class="inbox"><input id="xYear" inputmode="numeric"><span>. roka</span></div>
+                    <label for="xYear" data-i18n="xYear">Jednorazovú zaplatím na konci</label>
+                    <div class="inbox"><input id="xYear" inputmode="numeric"><span data-i18n="xYearU">. roka</span></div>
                   </div>
                 </div>
                 <div class="field">
-                  <label for="xMode" class="lab">Čo s ušetrenou istinou</label>
+                  <label for="xMode" class="lab" data-i18n="xMode">Čo s ušetrenou istinou</label>
                   <select id="xMode" class="full">
-                    <option value="kratsia">Skrátiť dobu splácania (splátka ostáva)</option>
-                    <option value="nizsia">Znížiť splátku (doba ostáva)</option>
+                    <option value="kratsia" data-i18n="xModeK">Skrátiť dobu splácania (splátka ostáva)</option>
+                    <option value="nizsia" data-i18n="xModeN">Znížiť splátku (doba ostáva)</option>
                   </select>
                 </div>
-                <p class="hint">
+                <p class="hint" data-i18n="hintX">
                   Ak banka za mimoriadnu splátku účtuje poplatok, zadaj ho ako jednorazový poplatok a kalkulačka
                   s ním bude počítať.
                 </p>
@@ -171,61 +178,61 @@
             </details>
 
             <details id="dAff">
-              <summary>Dostupnosť úveru (LTV, DSTI, DTI) <span class="on" id="bAff">zapnuté</span></summary>
+              <summary><span data-i18n="dAff">Dostupnosť úveru (LTV, DSTI, DTI)</span> <span class="on" data-i18n="on" id="bAff">zapnuté</span></summary>
               <div class="inner">
                 <div class="field">
                   <div class="lab">
-                    <label for="price">Hodnota nehnuteľnosti</label>
+                    <label for="price" data-i18n="price">Hodnota nehnuteľnosti</label>
                     <div class="inbox"><input id="price" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="income">Čistý mesačný príjem domácnosti</label>
+                    <label for="income" data-i18n="income">Čistý mesačný príjem domácnosti</label>
                     <div class="inbox"><input id="income" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="otherPay">Splátky iných úverov mesačne</label>
+                    <label for="otherPay" data-i18n="otherPay">Splátky iných úverov mesačne</label>
                     <div class="inbox"><input id="otherPay" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="otherDebt">Zostatok iných úverov</label>
+                    <label for="otherDebt" data-i18n="otherDebt">Zostatok iných úverov</label>
                     <div class="inbox"><input id="otherDebt" inputmode="decimal"><span class="cs">€</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="age">Vek (staršieho) žiadateľa</label>
-                    <div class="inbox"><input id="age" inputmode="numeric"><span>rokov</span></div>
+                    <label for="age" data-i18n="age">Vek (staršieho) žiadateľa</label>
+                    <div class="inbox"><input id="age" inputmode="numeric"><span data-i18n="unitY">rokov</span></div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="adults">Dospelí v domácnosti</label>
+                    <label for="adults" data-i18n="adults">Dospelí v domácnosti</label>
                     <div class="inbox">
-                      <select id="adults" aria-label="Počet dospelých">
-                        <option value="1">1 dospelý</option>
-                        <option value="2">2 dospelí</option>
+                      <select id="adults" data-i18n-aria="adultsAria" aria-label="Počet dospelých">
+                        <option value="1" data-i18n="adult1">1 dospelý</option>
+                        <option value="2" data-i18n="adult2">2 dospelí</option>
                       </select>
                     </div>
                   </div>
                 </div>
                 <div class="field">
                   <div class="lab">
-                    <label for="kids">Deti</label>
-                    <div class="inbox"><input id="kids" inputmode="numeric"><span>detí</span></div>
+                    <label for="kids" data-i18n="kids">Deti</label>
+                    <div class="inbox"><input id="kids" inputmode="numeric"><span data-i18n="kidsU">detí</span></div>
                   </div>
                 </div>
                 <div class="field">
-                  <label for="props" class="lab">Nehnuteľnosti na bývanie, ktoré už vlastníš</label>
+                  <label for="props" class="lab" data-i18n="props">Nehnuteľnosti na bývanie, ktoré už vlastníš</label>
                   <select id="props" class="full">
-                    <option value="0">Žiadnu – kupujem prvé bývanie</option>
-                    <option value="1">Jednu</option>
-                    <option value="2">Dve a viac</option>
+                    <option value="0" data-i18n="props0">Žiadnu – kupujem prvé bývanie</option>
+                    <option value="1" data-i18n="props1">Jednu</option>
+                    <option value="2" data-i18n="props2">Dve a viac</option>
                   </select>
                 </div>
                 <p class="hint" id="affHint"></p>
@@ -233,22 +240,22 @@
             </details>
 
             <details id="dTax">
-              <summary>Daňová úľava na úrokoch <span class="on" id="bTax">zapnuté</span></summary>
+              <summary><span data-i18n="dTax">Daňová úľava na úrokoch</span> <span class="on" data-i18n="on" id="bTax">zapnuté</span></summary>
               <div class="inner">
-                <label class="check"><input type="checkbox" id="tax"> Uplatním daňovú úľavu na zaplatené úroky</label>
+                <label class="check"><input type="checkbox" id="tax"> <span data-i18n="taxCheck">Uplatním daňovú úľavu na zaplatené úroky</span></label>
                 <div id="taxCZ">
                   <div class="field">
-                    <label for="czLim" class="lab">Ročný limit odpočtu</label>
+                    <label for="czLim" class="lab" data-i18n="czLim">Ročný limit odpočtu</label>
                     <select id="czLim" class="full">
-                      <option value="150000">150 000 Kč – zmluva od 1. 1. 2021</option>
-                      <option value="300000">300 000 Kč – zmluva do 31. 12. 2020</option>
+                      <option value="150000" data-i18n="czLim150">150 000 Kč – zmluva od 1. 1. 2021</option>
+                      <option value="300000" data-i18n="czLim300">300 000 Kč – zmluva do 31. 12. 2020</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label for="czRate" class="lab">Sadzba dane z príjmu</label>
+                    <label for="czRate" class="lab" data-i18n="czRate">Sadzba dane z príjmu</label>
                     <select id="czRate" class="full">
                       <option value="15">15 %</option>
-                      <option value="23">23 % (vyššie príjmy)</option>
+                      <option value="23" data-i18n="czRate23">23 % (vyššie príjmy)</option>
                     </select>
                   </div>
                 </div>
@@ -259,52 +266,52 @@
 
           <!-- Výsledok -->
           <section class="card res" aria-live="polite">
-            <div class="k">Mesačná splátka</div>
+            <div class="k" data-i18n="payK">Mesačná splátka</div>
             <div class="big" id="pay">–</div>
             <div class="sub" id="paySub"></div>
             <div class="sub" id="fixSub" hidden></div>
 
             <div class="apr">
-              <span>RPMN</span>
+              <span data-i18n="aprName">RPMN</span>
               <b id="apr">–</b>
-              <small>ročná percentuálna miera nákladov – úrok, poplatky aj poistenie, bez mimoriadnych splátok</small>
+              <small data-i18n="aprDesc">ročná percentuálna miera nákladov – úrok, poplatky aj poistenie, bez mimoriadnych splátok</small>
             </div>
 
             <div class="save" id="save"></div>
 
             <div class="aff" id="aff" hidden>
-              <div class="k">Dostupnosť podľa limitov <span id="affSrc"></span></div>
+              <div class="k"><span data-i18n="affK">Dostupnosť podľa limitov</span> <span id="affSrc"></span></div>
               <div id="affRows"></div>
               <div class="sub" id="affMax"></div>
             </div>
 
             <div class="taxbox" id="taxBox" hidden></div>
 
-            <div class="split" role="img" aria-label="Pomer istiny, úrokov a poplatkov">
+            <div class="split" role="img" data-i18n-aria="splitAria" aria-label="Pomer istiny, úrokov a poplatkov">
               <i id="sP" style="background: var(--prin)"></i>
               <i id="sI" style="background: var(--acc)"></i>
               <i id="sF" style="background: var(--fee)"></i>
             </div>
             <div class="legend">
-              <span><span class="dot" style="background: var(--prin)"></span>Istina <b id="pP"></b></span>
-              <span><span class="dot" style="background: var(--acc)"></span>Úroky <b id="pI"></b></span>
-              <span id="lF"><span class="dot" style="background: var(--fee)"></span>Poplatky a poistenie <b id="pF"></b></span>
+              <span><span class="dot" style="background: var(--prin)"></span><span data-i18n="prin">Istina</span> <b id="pP"></b></span>
+              <span><span class="dot" style="background: var(--acc)"></span><span data-i18n="interest">Úroky</span> <b id="pI"></b></span>
+              <span id="lF"><span class="dot" style="background: var(--fee)"></span><span data-i18n="dFee">Poplatky a poistenie</span> <b id="pF"></b></span>
             </div>
 
             <div class="stats">
-              <div class="stat"><span class="k">Výška úveru</span><b id="oP">–</b></div>
-              <div class="stat int"><span class="k">Úroky spolu</span><b id="oI">–</b></div>
-              <div class="stat"><span class="k">Celkom zaplatíš</span><b id="oT">–</b></div>
+              <div class="stat"><span class="k" data-i18n="amt">Výška úveru</span><b id="oP">–</b></div>
+              <div class="stat int"><span class="k" data-i18n="oI">Úroky spolu</span><b id="oI">–</b></div>
+              <div class="stat"><span class="k" data-i18n="oT">Celkom zaplatíš</span><b id="oT">–</b></div>
             </div>
 
-            <div class="k" style="margin-top: 20px">Očistené o infláciu (v dnešných peniazoch)</div>
+            <div class="k" style="margin-top: 20px" data-i18n="realK">Očistené o infláciu (v dnešných peniazoch)</div>
             <div class="stats" style="margin-top: 8px">
-              <div class="stat"><span class="k">Posledná splátka</span><b id="rL">–</b></div>
-              <div class="stat int"><span class="k">Reálny úrok</span><b id="rI">–</b></div>
-              <div class="stat"><span class="k">Reálne zaplatíš</span><b id="rT">–</b></div>
+              <div class="stat"><span class="k" data-i18n="rL">Posledná splátka</span><b id="rL">–</b></div>
+              <div class="stat int"><span class="k" data-i18n="rI">Reálny úrok</span><b id="rI">–</b></div>
+              <div class="stat"><span class="k" data-i18n="rT">Reálne zaplatíš</span><b id="rT">–</b></div>
             </div>
 
-            <p class="note">
+            <p class="note" data-i18n="note">
               Anuitné splácanie s mesačným úročením. Inflácia sa uvažuje ako konštantná. Skutočná ponuka banky sa
               môže líšiť. Limity a daňové pravidlá sú zjednodušené a orientačné, o úvere rozhoduje banka.
             </p>
@@ -315,22 +322,22 @@
 
     <section class="band">
       <div class="wrap">
-        <h2>Ako sa splátky delia v čase</h2>
+        <h2 data-i18n="chartH">Ako sa splátky delia v čase</h2>
         <div class="legend" style="margin-bottom: 10px">
-          <span><span class="dot" style="background: var(--prin)"></span>Istina (vrátane mimoriadnych)</span>
-          <span><span class="dot" style="background: var(--acc)"></span>Úrok</span>
-          <span><span class="dot" style="background: var(--fee)"></span>Poplatky a poistenie</span>
-          <span><span class="dot" style="background: var(--real)"></span>Ročne zaplatené v dnešných peniazoch</span>
+          <span><span class="dot" style="background: var(--prin)"></span><span data-i18n="lgPrin">Istina (vrátane mimoriadnych)</span></span>
+          <span><span class="dot" style="background: var(--acc)"></span><span data-i18n="lgInt">Úrok</span></span>
+          <span><span class="dot" style="background: var(--fee)"></span><span data-i18n="dFee">Poplatky a poistenie</span></span>
+          <span><span class="dot" style="background: var(--real)"></span><span data-i18n="lgReal">Ročne zaplatené v dnešných peniazoch</span></span>
         </div>
         <div class="fig">
-          <svg id="chart" role="img" aria-label="Ročné rozdelenie splátok"></svg>
+          <svg id="chart" role="img" data-i18n-aria="chartAria" aria-label="Ročné rozdelenie splátok"></svg>
         </div>
       </div>
     </section>
 
     <section class="band" style="padding-top: 0">
       <div class="wrap">
-        <h2>Splátkový kalendár po rokoch</h2>
+        <h2 data-i18n="tableH">Splátkový kalendár po rokoch</h2>
         <div class="scroll">
           <table>
             <thead id="th"></thead>
@@ -341,6 +348,7 @@
       </div>
     </section>
 
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

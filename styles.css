@@ -601,3 +601,25 @@ td.t {
     justify-self: start;
   }
 }
+.inbox span:empty {
+  display: none;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+}
+
+#lang {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font: 500 14px Inter, sans-serif;
+  cursor: pointer;
+}
